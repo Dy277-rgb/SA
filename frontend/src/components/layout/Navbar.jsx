@@ -24,10 +24,10 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-slate-light/20 bg-navy/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold text-white">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky">
-            <Plane size={18} className="text-white -rotate-45" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black">
+           <img src="/LOgo.png" alt="SkyLane logo" className="h-9 w-9 rounded-full object-cover" />
           </span>
-          SkyLane
+           Legendry Air Line
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

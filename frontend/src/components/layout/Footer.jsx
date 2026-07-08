@@ -6,10 +6,10 @@ export default function Footer() {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-4 lg:px-8">
         <div>
           <div className="flex items-center gap-2 font-display text-lg font-bold text-white">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky">
-              <Plane size={16} className="text-white -rotate-45" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black">
+              <img src="/LOgo.png" alt="SkyLane logo" className="h-9 w-9 rounded-full object-cover" />
             </span>
-            SkyLane
+             Legendry Air Line
           </div>
           <p className="mt-3 text-sm">Search, compare, and book flights to over 500 destinations worldwide.</p>
           <div className="mt-4 flex gap-3">
@@ -44,7 +44,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/50">
-        © {new Date().getFullYear()} SkyLane. All rights reserved.
+        © {new Date().getFullYear()} Legendry Air Line. All rights reserved.
       </div>
     </footer>
   )
