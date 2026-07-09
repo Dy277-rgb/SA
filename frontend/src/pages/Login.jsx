@@ -29,7 +29,7 @@ export default function Login() {
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-12 sm:px-6">
       <div className="mb-8 text-center">
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-black">
-              <img src="/LOgo.png" alt="SkyLane logo" className="h-9 w-9 rounded-full object-cover" />
+              <img src="/LOgo.png" alt="Legendry" className="h-9 w-9 rounded-full object-cover" />
         </span>
         <h1 className="mt-4 font-display text-2xl font-bold text-ink">Welcome back</h1>
         <p className="mt-1 text-sm text-slate">Log in to manage your bookings</p>
