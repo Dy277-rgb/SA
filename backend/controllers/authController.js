@@ -50,7 +50,7 @@ export async function login(req, res) {
     const match = await bcrypt.compare(password, record.password_hash)
     if (!match) return res.status(401).json({ message: 'Invalid credentials' })
 
-    const user = { id: record.id, name: record.name, email: record.email, role: record.role }
+    const user = { id: record.id, name: record.name, email: record.email, role: record.role, avatar: record.avatar || null }
     const token = signToken(user)
     res.json({ user, token })
   } catch (err) {
@@ -60,7 +60,7 @@ export async function login(req, res) {
 
 export async function me(req, res) {
   try {
-    const [rows] = await pool.query('SELECT id, name, email, role FROM users WHERE id = ?', [req.user.id])
+    const [rows] = await pool.query('SELECT id, name, email, role, avatar FROM users WHERE id = ?', [req.user.id])
     if (!rows[0]) return res.status(404).json({ message: 'User not found' })
     res.json({ user: rows[0] })
   } catch (err) {
@@ -69,11 +69,18 @@ export async function me(req, res) {
 }
 
 export async function updateProfile(req, res) {
-  const { name, email, currentPassword, newPassword } = req.body
+  const { name, email, currentPassword, newPassword, avatar } = req.body
   const userId = req.user.id
 
   if (!name || !email) {
     return res.status(400).json({ message: 'Name and email are required' })
+  }
+
+  // avatar is a base64 data URL (e.g. "data:image/jpeg;base64,...").
+  // Reject anything absurdly large — the frontend already compresses images
+  // before sending, so a legitimate upload should be well under this.
+  if (avatar && (typeof avatar !== 'string' || !avatar.startsWith('data:image/') || avatar.length > 4_000_000)) {
+    return res.status(400).json({ message: 'Invalid or oversized image' })
   }
 
   try {
@@ -99,11 +106,14 @@ export async function updateProfile(req, res) {
       passwordHash = await bcrypt.hash(newPassword, 10)
     }
 
-    await pool.query('UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?', [
-      name, email, passwordHash, userId,
+    // avatar === null means "remove photo"; undefined means "leave unchanged"
+    const nextAvatar = avatar === undefined ? record.avatar : avatar
+
+    await pool.query('UPDATE users SET name = ?, email = ?, password_hash = ?, avatar = ? WHERE id = ?', [
+      name, email, passwordHash, nextAvatar, userId,
     ])
 
-    const updatedUser = { id: userId, name, email, role: record.role }
+    const updatedUser = { id: userId, name, email, role: record.role, avatar: nextAvatar }
     const token = signToken(updatedUser)
     res.json({ user: updatedUser, token })
   } catch (err) {

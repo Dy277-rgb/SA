@@ -62,9 +62,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('skylane_token')
   }
 
-  async function updateProfile({ name, email, currentPassword, newPassword }) {
+  async function updateProfile({ name, email, currentPassword, newPassword, avatar }) {
     try {
-      const { data } = await api.put('/auth/profile', { name, email, currentPassword, newPassword })
+      const { data } = await api.put('/auth/profile', { name, email, currentPassword, newPassword, avatar })
       persist(data.user, data.token)
       return { success: true }
     } catch (err) {
@@ -77,7 +77,8 @@ export function AuthProvider({ children }) {
       if (newPassword && newPassword.length < 6) {
         return { success: false, message: 'New password must be at least 6 characters' }
       }
-      const updatedUser = { ...user, name, email }
+      const nextAvatar = avatar === undefined ? user?.avatar : avatar
+      const updatedUser = { ...user, name, email, avatar: nextAvatar }
       persist(updatedUser, 'demo-token')
       return { success: true, demo: true }
     }
