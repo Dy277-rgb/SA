@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Plane, Menu, X, User, LayoutDashboard, LogOut } from 'lucide-react'
+import { Plane, Menu, X, User, LayoutDashboard, LogOut, Settings } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 
 const navLinks = [
@@ -25,9 +25,9 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold text-white">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black">
-           <img src="/LOgo.png" alt="SkyLane logo" className="h-9 w-9 rounded-full object-cover" />
+              <img src="/LOgo.png" alt="SkyLane logo" className="h-9 w-9 rounded-full object-cover" />
           </span>
-           Legendry Air Line
+          Legendry Air Line
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -75,6 +75,13 @@ export default function Navbar() {
                   >
                     <LayoutDashboard size={15} /> Dashboard
                   </Link>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-ink hover:bg-mist"
+                  >
+                    <Settings size={15} /> Edit profile
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-mist"
@@ -118,6 +125,9 @@ export default function Navbar() {
               <div className="mt-2 flex flex-col gap-1">
                 <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10">
                   Dashboard
+                </Link>
+                <Link to="/profile" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10">
+                  Edit profile
                 </Link>
                 <button onClick={handleLogout} className="rounded-lg px-3 py-2 text-left text-sm font-medium text-red-400 hover:bg-white/10">
                   Log out

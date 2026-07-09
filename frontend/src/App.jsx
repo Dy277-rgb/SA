@@ -12,6 +12,7 @@ import Payment from './pages/Payment.jsx'
 import BookingConfirmation from './pages/BookingConfirmation.jsx'
 import UserDashboard from './pages/dashboard/UserDashboard.jsx'
 import AdminDashboard from './pages/dashboard/AdminDashboard.jsx'
+import Profile from './pages/dashboard/Profile.jsx'
 import NotFound from './pages/NotFound.jsx'
 
 export default function App() {
@@ -53,6 +54,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

@@ -62,8 +62,29 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('skylane_token')
   }
 
+  async function updateProfile({ name, email, currentPassword, newPassword }) {
+    try {
+      const { data } = await api.put('/auth/profile', { name, email, currentPassword, newPassword })
+      persist(data.user, data.token)
+      return { success: true }
+    } catch (err) {
+      const backendMessage = err.response?.data?.message
+      if (backendMessage) {
+        // Real backend responded but rejected the update (e.g. wrong current password, email taken)
+        return { success: false, message: backendMessage }
+      }
+      // No backend reachable — apply the update to the local demo user
+      if (newPassword && newPassword.length < 6) {
+        return { success: false, message: 'New password must be at least 6 characters' }
+      }
+      const updatedUser = { ...user, name, email }
+      persist(updatedUser, 'demo-token')
+      return { success: true, demo: true }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

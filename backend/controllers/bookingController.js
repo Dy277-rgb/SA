@@ -58,6 +58,61 @@ export async function createBooking(req, res) {
   }
 }
 
+const FREE_CANCELLATION_HOURS = 24
+
+export async function cancelBooking(req, res) {
+  const { reference } = req.params
+  const userId = req.user.id
+
+  const conn = await pool.getConnection()
+  try {
+    const [rows] = await conn.query(
+      `SELECT b.*, TIMESTAMPDIFF(HOUR, b.created_at, NOW()) AS hoursSinceBooking
+       FROM bookings b
+       WHERE b.reference = ? AND b.user_id = ?`,
+      [reference, userId]
+    )
+    const booking = rows[0]
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' })
+    }
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({ message: 'This booking is already cancelled' })
+    }
+    if (booking.hoursSinceBooking >= FREE_CANCELLATION_HOURS) {
+      return res.status(400).json({
+        message: `The 24-hour free cancellation window has passed for this booking`,
+      })
+    }
+
+    await conn.beginTransaction()
+
+    await conn.query(`UPDATE bookings SET status = 'cancelled' WHERE id = ?`, [booking.id])
+
+    const [[{ passengerCount }]] = await conn.query(
+      `SELECT COUNT(*) AS passengerCount FROM booking_passengers WHERE booking_id = ?`,
+      [booking.id]
+    )
+    if (booking.flight_id) {
+      await conn.query(`UPDATE flights SET seats_left = seats_left + ? WHERE id = ?`, [
+        passengerCount,
+        booking.flight_id,
+      ])
+    }
+
+    await conn.query(`UPDATE payments SET status = 'refunded' WHERE booking_id = ?`, [booking.id])
+
+    await conn.commit()
+    res.json({ message: 'Booking cancelled. Your refund has been initiated.', reference })
+  } catch (err) {
+    await conn.rollback()
+    res.status(500).json({ message: 'Cancellation failed', error: err.message })
+  } finally {
+    conn.release()
+  }
+}
+
 export async function myBookings(req, res) {
   try {
     const [rows] = await pool.query(
@@ -80,6 +135,7 @@ export async function myBookings(req, res) {
           total: Number(b.total),
           status: b.status,
           userId: b.user_id,
+          createdAt: b.created_at,
           flight: {
             from: b.origin_code,
             to: b.destination_code,

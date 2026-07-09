@@ -67,3 +67,46 @@ export async function me(req, res) {
     res.status(500).json({ message: 'Failed to fetch profile', error: err.message })
   }
 }
+
+export async function updateProfile(req, res) {
+  const { name, email, currentPassword, newPassword } = req.body
+  const userId = req.user.id
+
+  if (!name || !email) {
+    return res.status(400).json({ message: 'Name and email are required' })
+  }
+
+  try {
+    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [userId])
+    const record = rows[0]
+    if (!record) return res.status(404).json({ message: 'User not found' })
+
+    if (email !== record.email) {
+      const [existing] = await pool.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, userId])
+      if (existing.length) return res.status(409).json({ message: 'That email is already in use' })
+    }
+
+    let passwordHash = record.password_hash
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: 'Enter your current password to set a new one' })
+      }
+      const match = await bcrypt.compare(currentPassword, record.password_hash)
+      if (!match) return res.status(401).json({ message: 'Current password is incorrect' })
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: 'New password must be at least 6 characters' })
+      }
+      passwordHash = await bcrypt.hash(newPassword, 10)
+    }
+
+    await pool.query('UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?', [
+      name, email, passwordHash, userId,
+    ])
+
+    const updatedUser = { id: userId, name, email, role: record.role }
+    const token = signToken(updatedUser)
+    res.json({ user: updatedUser, token })
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update profile', error: err.message })
+  }
+}
