@@ -18,6 +18,12 @@ export const airlines = [
   { id: 'al4', name: 'Zenith Global', code: 'ZG', rating: 4.7, fleet: 'Airbus A380', color: '#1E52B8' },
 ]
 
+export const mockUsers = [
+  { id: 'user-demo-1', name: 'Alex Rivera', email: 'alex@example.com', role: 'user', createdAt: new Date(Date.now() - 30 * 86400000).toISOString() },
+  { id: 'user-demo-2', name: 'Priya Nair', email: 'priya@example.com', role: 'user', createdAt: new Date(Date.now() - 12 * 86400000).toISOString() },
+  { id: 'admin-1', name: 'Admin User', email: 'admin@skylane.com', role: 'admin', createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
+]
+
 export const popularDestinations = [
   { id: 'd1', city: 'Paris', country: 'France', code: 'CDG', price: 480, image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop' },
   { id: 'd2', city: 'Tokyo', country: 'Japan', code: 'NRT', price: 720, image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=800&auto=format&fit=crop' },

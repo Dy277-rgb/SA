@@ -73,7 +73,7 @@ export default function Login() {
         </Button>
 
         <p className="text-center text-xs text-slate-light">
-          Tip: use an email starting with "admin" (e.g. admin@skylane.com) to preview the admin dashboard.
+          Tip: use an email starting with "admin" (e.g. admin@dy.com) to preview the admin dashboard.
         </p>
       </form>
 
