@@ -79,3 +79,89 @@ export async function stats(req, res) {
     res.status(500).json({ message: 'Failed to fetch stats', error: err.message })
   }
 }
+
+export async function listUsers(req, res) {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, name, email, role, created_at AS createdAt FROM users ORDER BY created_at DESC'
+    )
+    res.json({ users: rows })
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch users', error: err.message })
+  }
+}
+
+export async function updateUserRole(req, res) {
+  const { id } = req.params
+  const { role } = req.body
+
+  if (!['user', 'admin'].includes(role)) {
+    return res.status(400).json({ message: 'Role must be "user" or "admin"' })
+  }
+  if (Number(id) === req.user.id) {
+    return res.status(400).json({ message: "You can't change your own role" })
+  }
+
+  try {
+    const [result] = await pool.query('UPDATE users SET role = ? WHERE id = ?', [role, id])
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' })
+    res.json({ message: 'Role updated' })
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update role', error: err.message })
+  }
+}
+
+export async function deleteUser(req, res) {
+  const { id } = req.params
+
+  if (Number(id) === req.user.id) {
+    return res.status(400).json({ message: "You can't delete your own account" })
+  }
+
+  try {
+    const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id])
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' })
+    res.json({ message: 'User deleted' })
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete user', error: err.message })
+  }
+}
+
+export async function adminCancelBooking(req, res) {
+  const { reference } = req.params
+
+  const conn = await pool.getConnection()
+  try {
+    const [rows] = await conn.query('SELECT * FROM bookings WHERE reference = ?', [reference])
+    const booking = rows[0]
+
+    if (!booking) return res.status(404).json({ message: 'Booking not found' })
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({ message: 'This booking is already cancelled' })
+    }
+
+    await conn.beginTransaction()
+
+    await conn.query(`UPDATE bookings SET status = 'cancelled' WHERE id = ?`, [booking.id])
+
+    const [[{ passengerCount }]] = await conn.query(
+      'SELECT COUNT(*) AS passengerCount FROM booking_passengers WHERE booking_id = ?',
+      [booking.id]
+    )
+    if (booking.flight_id) {
+      await conn.query('UPDATE flights SET seats_left = seats_left + ? WHERE id = ?', [
+        passengerCount,
+        booking.flight_id,
+      ])
+    }
+    await conn.query(`UPDATE payments SET status = 'refunded' WHERE booking_id = ?`, [booking.id])
+
+    await conn.commit()
+    res.json({ message: 'Booking cancelled by admin. Refund initiated.', reference })
+  } catch (err) {
+    await conn.rollback()
+    res.status(500).json({ message: 'Cancellation failed', error: err.message })
+  } finally {
+    conn.release()
+  }
+}
