@@ -136,7 +136,7 @@ bot.help((ctx) =>
     '/start — main menu\n' +
     '/search — search and book a flight\n' +
     '/mybookings — view your bookings and cancel within 24h\n' +
-    '/link — connect this Telegram account to your SkyLane website login\n' +
+    '/link — connect this Telegram account to your Legendry website login\n' +
     '/cancelflow — abandon whatever you\'re currently doing'
   )
 )
@@ -159,7 +159,7 @@ bot.action('menu_help', async (ctx) => {
     '/start — main menu\n' +
     '/search — search and book a flight\n' +
     '/mybookings — view your bookings and cancel within 24h\n' +
-    '/link — connect this Telegram account to your SkyLane website login'
+    '/link — connect this Telegram account to your Legendry website login'
   )
 })
 
@@ -167,7 +167,7 @@ bot.action('menu_link', async (ctx) => {
   await ctx.answerCbQuery()
   setStep(ctx.chat.id, 'awaiting_link_email')
   ctx.reply(
-    'Send the email of your existing SkyLane website account.\n\n' +
+    'Send the email of your existing Lengendry website account.\n\n' +
     "⚠️ Heads up: Telegram doesn't let bots delete messages you send, so your password will remain visible in this chat's history after linking. Only do this if you're comfortable with that, on a device you trust."
   )
 })
@@ -369,7 +369,7 @@ bot.on('text', async (ctx) => {
   if (session.step === 'awaiting_link_email') {
     updateData(ctx.chat.id, { linkEmail: text })
     setStep(ctx.chat.id, 'awaiting_link_password')
-    return ctx.reply('Now send your SkyLane account password:')
+    return ctx.reply('Now send your Legendry account password:')
   }
 
   if (session.step === 'awaiting_link_password') {
@@ -521,7 +521,7 @@ async function start() {
   conn.release()
 
   await bot.launch()
-  console.log('🤖 SkyLane Telegram bot is running')
+  console.log('🤖 Legendry Telegram bot is running')
 }
 
 start().catch((err) => {

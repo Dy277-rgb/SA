@@ -1,6 +1,8 @@
+import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import pool from '../config/db.js'
+import { verifyGoogleToken, verifyFacebookToken, verifyTelegramAuth } from '../utils/socialAuth.js'
 
 function signToken(user) {
   return jwt.sign(
@@ -118,5 +120,105 @@ export async function updateProfile(req, res) {
     res.json({ user: updatedUser, token })
   } catch (err) {
     res.status(500).json({ message: 'Failed to update profile', error: err.message })
+  }
+}
+
+/**
+ * Shared find-or-create/link logic for all three social providers.
+ *
+ * - `providerColumn` is the users table column that stores this provider's ID
+ *   ('google_id', 'facebook_id', or 'telegram_chat_id').
+ * - If a user already has that provider ID linked, log them in as that user.
+ * - Else if `email` matches an existing account (e.g. they signed up with a
+ *   password originally, or via a different provider), link this provider to
+ *   that existing account instead of creating a duplicate.
+ * - Otherwise, create a brand new account. Since there's no password to set,
+ *   a random unusable bcrypt hash is stored — the account can only ever be
+ *   accessed via that social provider (or by using "Forgot password" if you
+ *   add that flow later).
+ */
+async function findOrCreateSocialUser({ providerColumn, providerId, email, name, avatar }) {
+  const [byProvider] = await pool.query(`SELECT * FROM users WHERE ${providerColumn} = ?`, [providerId])
+  if (byProvider[0]) return byProvider[0]
+
+  if (email) {
+    const [byEmail] = await pool.query('SELECT * FROM users WHERE email = ?', [email])
+    if (byEmail[0]) {
+      const nextAvatar = byEmail[0].avatar || avatar || null
+      await pool.query(`UPDATE users SET ${providerColumn} = ?, avatar = ? WHERE id = ?`, [
+        providerId, nextAvatar, byEmail[0].id,
+      ])
+      return { ...byEmail[0], [providerColumn]: providerId, avatar: nextAvatar }
+    }
+  }
+
+  const randomPasswordHash = await bcrypt.hash(crypto.randomUUID(), 10)
+  const finalEmail = email || `${providerColumn}_${providerId}@skylane.social`
+
+  const [result] = await pool.query(
+    `INSERT INTO users (name, email, password_hash, role, avatar, ${providerColumn}) VALUES (?, ?, ?, 'user', ?, ?)`,
+    [name, finalEmail, randomPasswordHash, avatar, providerId]
+  )
+  const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId])
+  return rows[0]
+}
+
+function socialLoginResponse(res, user) {
+  const safeUser = { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar || null }
+  const token = signToken(safeUser)
+  res.json({ user: safeUser, token })
+}
+
+export async function googleAuth(req, res) {
+  const { credential } = req.body
+  if (!credential) return res.status(400).json({ message: 'Missing Google credential' })
+
+  try {
+    const profile = await verifyGoogleToken(credential)
+    const user = await findOrCreateSocialUser({
+      providerColumn: 'google_id',
+      providerId: profile.providerId,
+      email: profile.email,
+      name: profile.name,
+      avatar: profile.avatar,
+    })
+    socialLoginResponse(res, user)
+  } catch (err) {
+    res.status(401).json({ message: 'Google sign-in failed', error: err.message })
+  }
+}
+
+export async function facebookAuth(req, res) {
+  const { accessToken } = req.body
+  if (!accessToken) return res.status(400).json({ message: 'Missing Facebook access token' })
+
+  try {
+    const profile = await verifyFacebookToken(accessToken)
+    const user = await findOrCreateSocialUser({
+      providerColumn: 'facebook_id',
+      providerId: profile.providerId,
+      email: profile.email,
+      name: profile.name,
+      avatar: profile.avatar,
+    })
+    socialLoginResponse(res, user)
+  } catch (err) {
+    res.status(401).json({ message: 'Facebook sign-in failed', error: err.message })
+  }
+}
+
+export async function telegramAuth(req, res) {
+  try {
+    const profile = verifyTelegramAuth(req.body)
+    const user = await findOrCreateSocialUser({
+      providerColumn: 'telegram_chat_id',
+      providerId: profile.providerId,
+      email: null,
+      name: profile.name,
+      avatar: profile.avatar,
+    })
+    socialLoginResponse(res, user)
+  } catch (err) {
+    res.status(401).json({ message: 'Telegram sign-in failed', error: err.message })
   }
 }

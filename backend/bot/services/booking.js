@@ -36,7 +36,7 @@ export async function getOrCreateTelegramUser(ctx) {
 export async function linkTelegramToAccount(chatId, email, password) {
   const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email])
   const record = rows[0]
-  if (!record) return { success: false, message: "No SkyLane account found with that email." }
+  if (!record) return { success: false, message: "No Legendry account found with that email." }
 
   const match = await bcrypt.compare(password, record.password_hash)
   if (!match) return { success: false, message: 'Incorrect password.' }

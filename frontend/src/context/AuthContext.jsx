@@ -56,6 +56,16 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function socialLogin(provider, payload) {
+    try {
+      const { data } = await api.post(`/auth/${provider}`, payload)
+      persist(data.user, data.token)
+      return { success: true }
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || `${provider} sign-in failed` }
+    }
+  }
+
   function logout() {
     setUser(null)
     localStorage.removeItem('skylane_user')
@@ -85,7 +95,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, socialLogin }}>
       {children}
     </AuthContext.Provider>
   )

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Plane, Mail, Lock, User } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import Button from '../components/common/Button.jsx'
+import SocialLoginButtons from '../components/common/SocialLoginButtons.jsx'
 
 export default function Register() {
   const { register } = useAuth()
@@ -104,6 +105,8 @@ export default function Register() {
         <Button type="submit" disabled={loading} className="w-full">
           {loading ? 'Creating account...' : 'Create account'}
         </Button>
+
+        <SocialLoginButtons onError={setError} />
       </form>
 
       <p className="mt-6 text-center text-sm text-slate">

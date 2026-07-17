@@ -33,6 +33,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000
 
 app.listen(PORT, async () => {
-  console.log(`🚀 SkyLane API running on http://localhost:${PORT}`)
+  console.log(`🚀 Legendry API running on http://localhost:${PORT}`)
   await testConnection()
 })

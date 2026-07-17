@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
   avatar LONGTEXT DEFAULT NULL,
+  telegram_chat_id BIGINT DEFAULT NULL UNIQUE,
+  google_id VARCHAR(64) DEFAULT NULL UNIQUE,
+  facebook_id VARCHAR(64) DEFAULT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
