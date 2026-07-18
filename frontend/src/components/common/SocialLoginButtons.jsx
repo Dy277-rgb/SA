@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
-const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID
-const TELEGRAM_BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim()
+const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID?.trim()
+const TELEGRAM_BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME?.trim()
 
 function isConfigured(value) {
-  return Boolean(value) && !value.startsWith('your_')
+  const trimmed = value?.trim()
+  return Boolean(trimmed) && !trimmed.startsWith('your_')
 }
 
 function loadScript(src, id) {
@@ -111,7 +112,9 @@ export default function SocialLoginButtons({ onError }) {
   }, [])
 
   const anyConfigured = isConfigured(GOOGLE_CLIENT_ID) || isConfigured(FACEBOOK_APP_ID) || isConfigured(TELEGRAM_BOT_USERNAME)
-  if (!anyConfigured) return null
+  const isDev = import.meta.env.DEV
+
+  if (!anyConfigured && !isDev) return null
 
   return (
     <div className="mt-5 space-y-3">
@@ -122,9 +125,13 @@ export default function SocialLoginButtons({ onError }) {
       </div>
 
       <div className="flex flex-col items-center gap-3">
-        {isConfigured(GOOGLE_CLIENT_ID) && <div ref={googleButtonRef} />}
+        {isConfigured(GOOGLE_CLIENT_ID) ? (
+          <div ref={googleButtonRef} />
+        ) : (
+          isDev && <UnconfiguredNotice label="Google" envVar="VITE_GOOGLE_CLIENT_ID" />
+        )}
 
-        {isConfigured(FACEBOOK_APP_ID) && (
+        {isConfigured(FACEBOOK_APP_ID) ? (
           <button
             type="button"
             onClick={handleFacebookLogin}
@@ -133,10 +140,25 @@ export default function SocialLoginButtons({ onError }) {
           >
             Continue with Facebook
           </button>
+        ) : (
+          isDev && <UnconfiguredNotice label="Facebook" envVar="VITE_FACEBOOK_APP_ID" />
         )}
 
-        {isConfigured(TELEGRAM_BOT_USERNAME) && <div ref={telegramContainerRef} />}
+        {isConfigured(TELEGRAM_BOT_USERNAME) ? (
+          <div ref={telegramContainerRef} />
+        ) : (
+          isDev && <UnconfiguredNotice label="Telegram" envVar="VITE_TELEGRAM_BOT_USERNAME" />
+        )}
       </div>
+    </div>
+  )
+}
+
+function UnconfiguredNotice({ label, envVar }) {
+  return (
+    <div className="w-full max-w-[320px] rounded-lg border border-dashed border-slate-light/40 px-3 py-2 text-center text-xs text-slate-light">
+      {label} sign-in not configured — set <code className="font-mono">{envVar}</code> in{' '}
+      <code className="font-mono">frontend/.env</code> (see README section 5). Hidden automatically in production.
     </div>
   )
 }

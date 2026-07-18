@@ -1,7 +1,8 @@
 import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID?.trim()
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID)
 
 /**
  * Verifies a Google ID token (the `credential` returned by Google Identity
@@ -13,7 +14,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 export async function verifyGoogleToken(idToken) {
   const ticket = await googleClient.verifyIdToken({
     idToken,
-    audience: process.env.GOOGLE_CLIENT_ID,
+    audience: GOOGLE_CLIENT_ID,
   })
   const payload = ticket.getPayload()
   return {
@@ -58,7 +59,7 @@ export function verifyTelegramAuth(data) {
     .map((key) => `${key}=${fields[key]}`)
     .join('\n')
 
-  const secretKey = crypto.createHash('sha256').update(process.env.TELEGRAM_BOT_TOKEN).digest()
+  const secretKey = crypto.createHash('sha256').update(process.env.TELEGRAM_BOT_TOKEN.trim()).digest()
   const computedHash = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex')
 
   if (computedHash !== hash) {

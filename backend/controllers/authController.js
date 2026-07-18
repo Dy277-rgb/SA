@@ -184,7 +184,8 @@ export async function googleAuth(req, res) {
     })
     socialLoginResponse(res, user)
   } catch (err) {
-    res.status(401).json({ message: 'Google sign-in failed', error: err.message })
+    console.error('Google sign-in failed:', err.message)
+    res.status(401).json({ message: `Google sign-in failed: ${err.message}` })
   }
 }
 
@@ -203,7 +204,8 @@ export async function facebookAuth(req, res) {
     })
     socialLoginResponse(res, user)
   } catch (err) {
-    res.status(401).json({ message: 'Facebook sign-in failed', error: err.message })
+    console.error('Facebook sign-in failed:', err.message)
+    res.status(401).json({ message: `Facebook sign-in failed: ${err.message}` })
   }
 }
 
@@ -219,6 +221,7 @@ export async function telegramAuth(req, res) {
     })
     socialLoginResponse(res, user)
   } catch (err) {
-    res.status(401).json({ message: 'Telegram sign-in failed', error: err.message })
+    console.error('Telegram sign-in failed:', err.message)
+    res.status(401).json({ message: `Telegram sign-in failed: ${err.message}` })
   }
 }
