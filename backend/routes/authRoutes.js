@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { register, login, me, updateProfile, googleAuth, facebookAuth, telegramAuth } from '../controllers/authController.js'
+import { register, login, me, updateProfile, googleAuth } from '../controllers/authController.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
@@ -10,7 +10,5 @@ router.get('/me', requireAuth, me)
 router.put('/profile', requireAuth, updateProfile)
 
 router.post('/google', googleAuth)
-router.post('/facebook', facebookAuth)
-router.post('/telegram', telegramAuth)
 
 export default router

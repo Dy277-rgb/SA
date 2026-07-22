@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import pool from '../config/db.js'
-import { verifyGoogleToken, verifyFacebookToken, verifyTelegramAuth } from '../utils/socialAuth.js'
+import { verifyGoogleToken } from '../utils/socialAuth.js'
 
 function signToken(user) {
   return jwt.sign(
@@ -186,42 +186,5 @@ export async function googleAuth(req, res) {
   } catch (err) {
     console.error('Google sign-in failed:', err.message)
     res.status(401).json({ message: `Google sign-in failed: ${err.message}` })
-  }
-}
-
-export async function facebookAuth(req, res) {
-  const { accessToken } = req.body
-  if (!accessToken) return res.status(400).json({ message: 'Missing Facebook access token' })
-
-  try {
-    const profile = await verifyFacebookToken(accessToken)
-    const user = await findOrCreateSocialUser({
-      providerColumn: 'facebook_id',
-      providerId: profile.providerId,
-      email: profile.email,
-      name: profile.name,
-      avatar: profile.avatar,
-    })
-    socialLoginResponse(res, user)
-  } catch (err) {
-    console.error('Facebook sign-in failed:', err.message)
-    res.status(401).json({ message: `Facebook sign-in failed: ${err.message}` })
-  }
-}
-
-export async function telegramAuth(req, res) {
-  try {
-    const profile = verifyTelegramAuth(req.body)
-    const user = await findOrCreateSocialUser({
-      providerColumn: 'telegram_chat_id',
-      providerId: profile.providerId,
-      email: null,
-      name: profile.name,
-      avatar: profile.avatar,
-    })
-    socialLoginResponse(res, user)
-  } catch (err) {
-    console.error('Telegram sign-in failed:', err.message)
-    res.status(401).json({ message: `Telegram sign-in failed: ${err.message}` })
   }
 }
